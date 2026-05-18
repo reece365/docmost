@@ -340,4 +340,24 @@ export class EnvironmentService {
       .map((o) => o.trim())
       .filter(Boolean);
   }
+
+  getSlackClientId(): string {
+    return this.configService.get<string>('SLACK_CLIENT_ID');
+  }
+
+  getSlackClientSecret(): string {
+    return this.configService.get<string>('SLACK_CLIENT_SECRET');
+  }
+
+  getSlackRedirectUrl(): string {
+    return this.configService.get<string>('SLACK_REDIRECT_URL');
+  }
+
+  isSlackAuthEnabled(): boolean {
+    return Boolean(
+      this.getSlackClientId() &&
+        this.getSlackClientSecret() &&
+        this.getSlackRedirectUrl(),
+    );
+  }
 }

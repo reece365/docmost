@@ -91,6 +91,7 @@ export interface IPublicWorkspace {
   hostname: string;
   enforceSso: boolean;
   authProviders: IAuthProvider[];
+  slackAuthEnabled?: boolean;
 }
 
 export interface IVersion {

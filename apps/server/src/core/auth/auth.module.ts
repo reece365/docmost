@@ -5,11 +5,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { WorkspaceModule } from '../workspace/workspace.module';
 import { SignupService } from './services/signup.service';
 import { TokenModule } from './token.module';
+import { SlackAuthService } from './services/slack-auth.service';
 
 @Module({
   imports: [TokenModule, WorkspaceModule],
   controllers: [AuthController],
-  providers: [AuthService, SignupService, JwtStrategy],
+  providers: [AuthService, SignupService, JwtStrategy, SlackAuthService],
   exports: [SignupService],
 })
 export class AuthModule {}

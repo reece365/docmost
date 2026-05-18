@@ -11,17 +11,20 @@ import {
   Box,
   Anchor,
   Group,
+  Divider,
+  Alert,
 } from "@mantine/core";
 import classes from "./auth.module.css";
 import { useRedirectIfAuthenticated } from "@/features/auth/hooks/use-redirect-if-authenticated.ts";
-import { Link } from "react-router-dom";
-import APP_ROUTE from "@/lib/app-route.ts";
+import { Link, useSearchParams } from "react-router-dom";
+import APP_ROUTE, { getRedirectParam } from "@/lib/app-route.ts";
 import { useTranslation } from "react-i18next";
 import SsoLogin from "@/ee/components/sso-login.tsx";
 import { useWorkspacePublicDataQuery } from "@/features/workspace/queries/workspace-query.ts";
 import { Error404 } from "@/components/ui/error-404.tsx";
 import React from "react";
 import { AuthLayout } from "./auth-layout.tsx";
+import { IconBrandSlack } from "@tabler/icons-react";
 
 const formSchema = z.object({
   email: z
@@ -33,6 +36,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function LoginForm() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const { signIn, isLoading } = useAuth();
   useRedirectIfAuthenticated();
   const {
@@ -54,6 +58,20 @@ export function LoginForm() {
     await signIn(data);
   }
 
+  function onSlackSignIn() {
+    const redirect = getRedirectParam();
+    const query = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
+    window.location.href = `/api/auth/slack${query}`;
+  }
+
+  const slackError = searchParams.get("slackError");
+  const slackErrorMessages: Record<string, string> = {
+    access_denied: t("Slack sign-in was canceled."),
+    email_required: t("Slack did not provide an email for your account."),
+    authentication_failed: t("Unable to sign in with Slack. Please try again."),
+  };
+  const slackErrorMessage = slackError ? slackErrorMessages[slackError] : null;
+
   if (isDataLoading) {
    return null;
   }
@@ -70,7 +88,29 @@ export function LoginForm() {
             {t("Login")}
           </Title>
 
+          {slackErrorMessage && (
+            <Alert color="red" mb="md">
+              {slackErrorMessage}
+            </Alert>
+          )}
+
           <SsoLogin />
+
+          {data?.slackAuthEnabled && (
+            <>
+              <Button
+                onClick={onSlackSignIn}
+                leftSection={<IconBrandSlack size={16} />}
+                variant="default"
+                fullWidth
+              >
+                {t("Sign in with Slack")}
+              </Button>
+              {!data?.enforceSso && (
+                <Divider my="xs" label="OR" labelPosition="center" />
+              )}
+            </>
+          )}
 
           {!data?.enforceSso && (
             <>
