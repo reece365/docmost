@@ -7,7 +7,7 @@ type SlackStatePayload = {
   ts: number;
 };
 
-const SLACK_STATE_MAX_AGE_MS = 10 * 60 * 1000;
+const SLACK_STATE_MAX_AGE_MILLISECONDS = 10 * 60 * 1000;
 
 function base64UrlEncode(input: string): string {
   return Buffer.from(input, 'utf8').toString('base64url');
@@ -80,7 +80,7 @@ export function parseSignedSlackState(
 
   if (!payload.workspaceId || typeof payload.workspaceId !== 'string') return null;
   if (!payload.ts || typeof payload.ts !== 'number') return null;
-  if (Date.now() - payload.ts > SLACK_STATE_MAX_AGE_MS) return null;
+  if (Date.now() - payload.ts > SLACK_STATE_MAX_AGE_MILLISECONDS) return null;
 
   return {
     workspaceId: payload.workspaceId,

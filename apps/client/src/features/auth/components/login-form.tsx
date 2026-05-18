@@ -65,14 +65,12 @@ export function LoginForm() {
   }
 
   const slackError = searchParams.get("slackError");
-  const slackErrorMessage =
-    slackError === "access_denied"
-      ? t("Slack sign-in was canceled.")
-      : slackError === "email_required"
-        ? t("Slack did not provide an email for your account.")
-        : slackError === "authentication_failed"
-          ? t("Unable to sign in with Slack. Please try again.")
-          : null;
+  const slackErrorMessages: Record<string, string> = {
+    access_denied: t("Slack sign-in was canceled."),
+    email_required: t("Slack did not provide an email for your account."),
+    authentication_failed: t("Unable to sign in with Slack. Please try again."),
+  };
+  const slackErrorMessage = slackError ? slackErrorMessages[slackError] : null;
 
   if (isDataLoading) {
    return null;

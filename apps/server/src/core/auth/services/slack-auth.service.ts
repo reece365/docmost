@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
 import { InjectKysely } from 'nestjs-kysely';
 import { KyselyDB } from '@docmost/db/types/kysely.types';
 import { User, Workspace } from '@docmost/db/types/entity.types';
@@ -12,7 +13,7 @@ import { UserRepo } from '@docmost/db/repos/user/user.repo';
 import { SignupService } from './signup.service';
 import { SessionService } from '../../session/session.service';
 import { executeTx } from '@docmost/db/utils';
-import { isUserDisabled, nanoIdGen } from '../../../common/helpers';
+import { isUserDisabled } from '../../../common/helpers';
 import { validateAllowedEmail } from '../auth.util';
 import {
   buildSlackProviderUserId,
@@ -95,9 +96,7 @@ export class SlackAuthService {
     const email = userInfo.email?.toLowerCase();
 
     if (!email) {
-      throw new BadRequestException(
-        'Slack account did not provide an email address.',
-      );
+      throw new SlackEmailRequiredException();
     }
 
     if (!slackUserId) {
@@ -196,7 +195,7 @@ export class SlackAuthService {
           {
             email: opts.email,
             name: opts.displayName || opts.email.split('@')[0],
-            password: `slack-${nanoIdGen()}A1!`,
+            password: randomBytes(24).toString('base64url'),
           },
           opts.workspace.id,
           trx,
@@ -236,5 +235,11 @@ export class SlackAuthService {
 
       return user;
     });
+  }
+}
+
+export class SlackEmailRequiredException extends BadRequestException {
+  constructor() {
+    super('Slack account did not provide an email address.');
   }
 }

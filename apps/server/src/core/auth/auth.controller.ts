@@ -39,7 +39,10 @@ import {
   AUDIT_SERVICE,
   IAuditService,
 } from '../../integrations/audit/audit.service';
-import { SlackAuthService } from './services/slack-auth.service';
+import {
+  SlackAuthService,
+  SlackEmailRequiredException,
+} from './services/slack-auth.service';
 
 @SkipThrottle({ [AI_CHAT_THROTTLER]: true })
 @UseGuards(ThrottlerGuard)
@@ -208,7 +211,7 @@ export class AuthController {
     }
 
     try {
-      const { authToken, redirectPath } =
+      const { authToken } =
         await this.slackAuthService.signInWithCallback({
           code,
           state,
@@ -216,9 +219,9 @@ export class AuthController {
         });
 
       this.setAuthCookie(res, authToken);
-      return res.redirect(redirectPath || '/home');
+      return res.redirect('/home');
     } catch (err: any) {
-      if (err?.message?.toLowerCase()?.includes('email')) {
+      if (err instanceof SlackEmailRequiredException) {
         return res.redirect('/login?slackError=email_required');
       }
       return res.redirect('/login?slackError=authentication_failed');
