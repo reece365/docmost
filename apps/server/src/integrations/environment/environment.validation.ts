@@ -170,6 +170,36 @@ export class EnvironmentVariables {
     },
   )
   CLICKHOUSE_URL: string;
+
+  @ValidateIf(
+    (obj) =>
+      obj.SLACK_CLIENT_ID ||
+      obj.SLACK_CLIENT_SECRET ||
+      obj.SLACK_REDIRECT_URL,
+  )
+  @IsNotEmpty()
+  @IsString()
+  SLACK_CLIENT_ID: string;
+
+  @ValidateIf(
+    (obj) =>
+      obj.SLACK_CLIENT_ID ||
+      obj.SLACK_CLIENT_SECRET ||
+      obj.SLACK_REDIRECT_URL,
+  )
+  @IsNotEmpty()
+  @IsString()
+  SLACK_CLIENT_SECRET: string;
+
+  @ValidateIf(
+    (obj) =>
+      obj.SLACK_CLIENT_ID ||
+      obj.SLACK_CLIENT_SECRET ||
+      obj.SLACK_REDIRECT_URL,
+  )
+  @IsNotEmpty()
+  @IsUrl({ protocols: ['http', 'https'], require_tld: false })
+  SLACK_REDIRECT_URL: string;
 }
 
 export function validate(config: Record<string, any>) {

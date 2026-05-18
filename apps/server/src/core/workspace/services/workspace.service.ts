@@ -113,7 +113,10 @@ export class WorkspaceService {
 
     const { licenseKey, plan, ...rest } = workspace;
 
-    return rest;
+    return {
+      ...rest,
+      slackAuthEnabled: this.environmentService.isSlackAuthEnabled(),
+    };
   }
 
   async create(

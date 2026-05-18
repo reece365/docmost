@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -37,6 +39,7 @@ import {
   AUDIT_SERVICE,
   IAuditService,
 } from '../../integrations/audit/audit.service';
+import { SlackAuthService } from './services/slack-auth.service';
 
 @SkipThrottle({ [AI_CHAT_THROTTLER]: true })
 @UseGuards(ThrottlerGuard)
@@ -49,6 +52,7 @@ export class AuthController {
     private sessionService: SessionService,
     private environmentService: EnvironmentService,
     private moduleRef: ModuleRef,
+    private slackAuthService: SlackAuthService,
     @Inject(AUDIT_SERVICE) private readonly auditService: IAuditService,
   ) {}
 
@@ -179,6 +183,46 @@ export class AuthController {
     @AuthWorkspace() workspace: Workspace,
   ) {
     return this.authService.verifyUserToken(verifyUserTokenDto, workspace.id);
+  }
+
+  @Get('slack')
+  async slackLogin(
+    @AuthWorkspace() workspace: Workspace,
+    @Res() res: FastifyReply,
+    @Query('redirect') redirect?: string,
+  ) {
+    const authUrl = this.slackAuthService.getAuthorizationUrl(workspace, redirect);
+    return res.redirect(authUrl);
+  }
+
+  @Get('slack/callback')
+  async slackCallback(
+    @AuthWorkspace() workspace: Workspace,
+    @Res() res: FastifyReply,
+    @Query('code') code?: string,
+    @Query('state') state?: string,
+    @Query('error') error?: string,
+  ) {
+    if (error) {
+      return res.redirect(`/login?slackError=${encodeURIComponent(error)}`);
+    }
+
+    try {
+      const { authToken, redirectPath } =
+        await this.slackAuthService.signInWithCallback({
+          code,
+          state,
+          workspace,
+        });
+
+      this.setAuthCookie(res, authToken);
+      return res.redirect(redirectPath || '/home');
+    } catch (err: any) {
+      if (err?.message?.toLowerCase()?.includes('email')) {
+        return res.redirect('/login?slackError=email_required');
+      }
+      return res.redirect('/login?slackError=authentication_failed');
+    }
   }
 
   @SkipThrottle({ [AUTH_THROTTLER]: true })
